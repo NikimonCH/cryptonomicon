@@ -1,19 +1,19 @@
 <template>
-  <div class="head">Отслеживаемые тикеры</div>
+  <slot></slot>
   <div class="card-container">
-    <div v-for="card in tickers" :key="card" class="card">
+    <div v-for="card in items" :key="card" class="card">
       <h3 class="name">{{ card.name }}</h3>
       <h2 class="price">{{ card.price }}</h2>
-      <button class="button" @click="deleteTicker(card)">Удалить</button>
+      <button class="button" @click="deleteItem(card)">Удалить</button>
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: "BasicCard",
+  name: "ItemList",
   props: {
-    tickers: {
+    items: {
       type: Array,
       required: true,
       default() {
@@ -22,27 +22,20 @@ export default {
     },
   },
   emits: {
-    "delete-ticker": {
+    "delete-item": {
       type: String,
     },
   },
   methods: {
-    deleteTicker(tickerToRemove) {
-      this.$emit("delete-ticker", tickerToRemove);
+    deleteItem(itemToRemove) {
+      this.$emit("delete-item", itemToRemove);
     },
   },
 };
 </script>
 
 <style scoped>
-.head {
-  font-size: large;
-  margin: auto;
-  margin-bottom: 30px;
-}
 .card-container {
-  /* background-color: darkmagenta; */
-  /* color: white; */
   padding: 10px;
   width: 70%;
   margin: auto;

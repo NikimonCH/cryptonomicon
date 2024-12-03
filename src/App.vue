@@ -1,5 +1,14 @@
 <template>
   <div class="base">
+    <Modal :isOpen="modalIsOpen" @close-modal="closeModal">
+      <template #item>
+        {{ this.tickerToRemove }}
+        <button @click="closeModal()">Отмена</button>
+        <button @click="closeModal(), deleteTicker(this.tickerToRemove)">
+          Подтверждаю
+        </button>
+      </template>
+    </Modal>
     <p class="title">Тикер</p>
     <input
       v-model="inputTicker"
@@ -36,14 +45,10 @@
       placeholder="Искомый токен"
     />
     <hr />
-    <Card
-      @click="console.log()"
-      :tickers="filteredTickers"
-      @add-ticker="addTickerByInput()"
-      @delete-ticker="deleteTicker"
-    ></Card>
+    <ItemList :items="filteredTickers" @delete-item="openModal">
+      <div class="head">Отслеживаемые тикеры</div>
+    </ItemList>
     <hr />
-    <!-- <hr /> -->
   </div>
 </template>
 
@@ -53,10 +58,11 @@
 // [ ] Адреса веб страницы
 // [ ] Cookies
 // [x] Filter
+// [ ] Func sleep
 
-// import apifetcher from "./api";
-import Card from "./components/Card.vue";
-// import apifetcher from "./api.js";
+import ItemList from "./components/ItemList.vue";
+import Modal from "./components/ModalWindow.vue";
+import { apifetcher } from "./api.js";
 
 export default {
   name: "App",
@@ -64,23 +70,25 @@ export default {
     return {
       inputTicker: "",
       inputFilter: "",
+      tickerToRemove: {},
       possibleTickers: [],
       prompts: [],
+      modalIsOpen: false,
       filteredTickers: [],
       addedTickers: [
-        { name: "DEMO1", price: "-" },
-        { name: "DEMO2", price: "-" },
-        { name: "DEMO3", price: "-" },
-        { name: "DEMO4", price: "-" },
-        { name: "DEMO5", price: "-" },
+        { name: "BTC", price: "-" },
+        { name: "BTCD", price: "-" },
+        { name: "BTCRY", price: "-" },
+        { name: "DBTC", price: "-" },
+        { name: "BTCR", price: "-" },
       ],
-      page: 1,
       errorTickerAdded: false,
       errorTickerNotExistInData: false,
     };
   },
   components: {
-    Card,
+    ItemList,
+    Modal,
   },
   methods: {
     addTickerByInput() {
@@ -94,6 +102,7 @@ export default {
         this.addedTickers.push(newTicker);
       else this.errorTickerAdded = true;
       this.clearInput();
+      this.filterHandler();
     },
     addTickerByPrompt(prompt) {
       const newTicker = {
@@ -102,10 +111,26 @@ export default {
       };
       this.addedTickers.push(newTicker);
       this.clearInput();
+      this.filterHandler();
     },
     deleteTicker(tickerToRemove) {
       this.addedTickers.splice(this.addedTickers.indexOf(tickerToRemove), 1);
+      this.filterHandler();
     },
+    tickerAdded(newTickerName) {
+      let testbool = false;
+      this.addedTickers.forEach((currentTicker) => {
+        if (
+          currentTicker.name.toLowerCase().includes(newTickerName.toLowerCase())
+        )
+          testbool = true;
+      });
+      return testbool;
+    },
+    tickerInData(newTickerName) {
+      return this.possibleTickers.includes(newTickerName);
+    },
+
     promptsHandler() {
       this.prompts = [];
       this.clearErrors();
@@ -122,24 +147,13 @@ export default {
         return !this.tickerAdded(item);
       });
     },
-    tickerAdded(newTickerName) {
-      let testbool = false;
-      this.addedTickers.forEach((currentTicker) => {
-        if (
-          currentTicker.name.toLowerCase().includes(newTickerName.toLowerCase())
-        )
-          testbool = true;
-      });
-      return testbool;
-    },
-    tickerInData(newTickerName) {
-      return this.possibleTickers.includes(newTickerName);
-    },
+
     errorHandler() {},
     clearErrors() {
       this.errorTickerNotExistInData = false;
       this.errorTickerAdded = false;
     },
+
     clearInput() {
       this.inputTicker = "";
       this.prompts = [];
@@ -154,34 +168,31 @@ export default {
         )
           this.filteredTickers.push(currentTicker);
       });
-    },
-    async apifetcher() {
-      const url =
-        "https://min-api.cryptocompare.com/data/all/coinlist?summary=true";
-      let response = await fetch(url);
-      let somejson = await response.json();
-      this.possibleTickers = Object.keys(somejson.Data);
 
-      // let data2 = {};
-      // await fetch(url).then( (response) => {
-      //   response.json().then( (somejson) => {
-      //     data2 = somejson.Data;
-      //     console.log(data2, "fetch");
-      //     console.log(this, "fetch this");
-      //     this.data1;
-      //   });
-      // });
-      // console.log(this.data1, "after fetch");
+      // this.addedTickers.filter((currentTicker) => {});
+    },
+
+    openModal(tickerToRemove) {
+      this.tickerToRemove = tickerToRemove;
+      this.modalIsOpen = true;
+    },
+    closeModal() {
+      this.modalIsOpen = false;
     },
   },
-  created() {
-    this.apifetcher();
+  async created() {
+    this.possibleTickers = Object.keys(await apifetcher());
     this.filterHandler();
   },
 };
 </script>
 
 <style scoped>
+.head {
+  font-size: large;
+  margin: auto;
+  margin-bottom: 30px;
+}
 .base {
   display: flex;
   flex-direction: column;
