@@ -1,7 +1,8 @@
 <template>
   <div v-if="isOpen" class="main">
-    <p>Вы уверены что хотите удалить тикер</p>
-    <slot name="item"> </slot>
+    <slot name="content"></slot>
+    <hr />
+    <slot name="actions"> </slot>
   </div>
 </template>
 <script>

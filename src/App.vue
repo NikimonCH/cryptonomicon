@@ -1,8 +1,12 @@
 <template>
   <div class="base">
     <Modal :isOpen="modalIsOpen" @close-modal="closeModal">
-      <template #item>
-        {{ this.tickerToRemove }}
+      <template #content>
+        <p>
+          Вы уверены что хотите удалить тикер "{{ this.tickerToRemove.name }}"
+        </p>
+      </template>
+      <template #actions>
         <button @click="closeModal()">Отмена</button>
         <button @click="closeModal(), deleteTicker(this.tickerToRemove)">
           Подтверждаю
